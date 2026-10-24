@@ -8,16 +8,16 @@ entity spi_master is
     );
     port (
         clk      : in  std_logic;                    -- Системний годинник
-        rst      : in  std_logic;                    -- Асинхронний ресет (активний '1')
-        start    : in  std_logic;                    -- Сигнал початку передачі
+        rst      : in  std_logic;                    -- Асинхр. ресет ('1')
+        start    : in  std_logic;                    -- Початок передачі
         data_in  : in  std_logic_vector(7 downto 0); -- Байт для передачі
         miso     : in  std_logic;                    -- Вхід даних від Slave
 
         sck      : out std_logic;                    -- Лінія SCK
         mosi     : out std_logic;                    -- Лінія MOSI
-        ss_n     : out std_logic;                    -- Лінія вибору Slave CS/SS (активний '0')
+        ss_n     : out std_logic;                    -- Вибір Slave ('0')
         busy     : out std_logic;                    -- Модуль зайнятий
-        data_out : out std_logic_vector(7 downto 0)  -- Прийнятий байт від Slave
+        data_out : out std_logic_vector(7 downto 0)  -- Прийнятий байт
     );
 end entity spi_master;
 
@@ -67,9 +67,11 @@ begin
 
                 when PREPARE =>
                     if clk_cnt = CLK_DIV - 1 then
-                        clk_cnt <= 0;
-                        sck_reg <= '1';
-                        state   <= TRANSFER;
+                        clk_cnt   <= 0;
+                        sck_reg   <= '1';
+                        -- 1-й наростаючий фронт SCK: прийом MSB
+                        rx_reg(7) <= miso;
+                        state     <= TRANSFER;
                     else
                         clk_cnt <= clk_cnt + 1;
                     end if;

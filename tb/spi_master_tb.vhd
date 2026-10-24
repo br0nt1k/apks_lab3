@@ -50,13 +50,16 @@ begin
         wait;
     end process;
 
-    -- Імітація Slave-пристрою
+    -- Імітація Slave-пристрою (SPI Mode 0: CPOL = 0, CPHA = 0)
     slave_process : process(sck, ss_n)
         variable bit_idx : integer := 7;
     begin
         if ss_n = '1' then
             bit_idx := 7;
             miso <= '0';
+        elsif falling_edge(ss_n) then
+            miso    <= slave_tx_data(7);   -- MSB до першого фронту SCK
+            bit_idx := 6;
         elsif falling_edge(sck) then
             miso <= slave_tx_data(bit_idx);
             if bit_idx > 0 then
@@ -84,7 +87,8 @@ begin
         wait until busy = '0';
         wait for 200 ns;
 
-        assert false report "Simulation completed successfully!" severity note;
+        assert false
+            report "Simulation completed successfully!" severity note;
         sim_done <= true; -- Зупиняємо симуляцію коректно
         wait;
     end process;
